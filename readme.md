@@ -65,3 +65,7 @@ Authenticate user with rate limiting.
 
 ### GET /health
 Health check endpoint.
+
+### Author
+Bibekananda Pandey 
+11811278
