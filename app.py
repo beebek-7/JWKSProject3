@@ -39,6 +39,18 @@ ph = PasswordHasher()
 DATABASE = 'totally_not_my_privateKeys.db'
 
 def encrypt_key(key_data):
+    """
+    Encrypt key data using Fernet (AES).
+    
+    Args:
+        key_data (str or bytes): The key data to encrypt
+        
+    Returns:
+        bytes: Encrypted key data
+        
+    Raises:
+        ValueError: If encryption fails
+    """
     if isinstance(key_data, str):
         key_data = key_data.encode()
     return fernet.encrypt(key_data)
@@ -66,6 +78,12 @@ def get_db():
             conn.close()
 
 def init_db():
+    """
+    Initialize database tables.
+    Creates users, auth_logs, and keys tables if they don't exist.
+    Also sets up initial test keys for validation.
+    """
+    
     with get_db() as conn:
         c = conn.cursor()
         
@@ -125,6 +143,15 @@ def init_db():
 # Rate limiting
 request_counts = {}
 def is_rate_limited(ip):
+        """
+    Check if an IP has exceeded rate limits.
+    
+    Args:
+        ip (str): IP address to check
+        
+    Returns:
+        bool: True if rate limited, False otherwise
+    """
     now = time.time()
     if ip not in request_counts:
         request_counts[ip] = []
@@ -153,6 +180,19 @@ init_db()
 
 @app.route('/register', methods=['POST'])
 def register():
+    """
+    Register a new user.
+    
+    Expects JSON with:
+    - username: str
+    - email: str
+    
+    Returns:
+    - 201: Successfully created with generated password
+    - 400: Missing fields
+    - 409: Username/email already exists
+    """
+  
     data = request.get_json()
     if not data or 'username' not in data or 'email' not in data:
         return jsonify({"error": "Missing required fields"}), 400
@@ -174,6 +214,19 @@ def register():
 
 @app.route('/auth', methods=['POST'])
 def auth():
+    """
+    Authenticate a user.
+    
+    Expects JSON with:
+    - username: str
+    - password: str
+    
+    Returns:
+    - 200: Authentication successful
+    - 400: Missing fields
+    - 401: Invalid credentials
+    - 429: Rate limited
+    """
     # Check rate limit first
     if is_rate_limited(request.remote_addr):
         return jsonify({"error": "Too many requests"}), 429
